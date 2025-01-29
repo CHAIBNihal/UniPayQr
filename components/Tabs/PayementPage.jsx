@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TextInput, Alert, Platform, Image, Button, TouchableOpacity } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { act, useEffect, useState } from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -8,8 +8,9 @@ import { useGlobalProvider } from '../../Context/GlobalProvider';
 import { supabase } from '../../lib/supabase';
 import QRCode from 'react-native-qrcode-svg';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const PayementPage = () => {
-  const { sessionContext, setLoading, qrData, setQrData } = useGlobalProvider();
+  const { sessionContext, setLoading, setActive, active } = useGlobalProvider();
   const [user, setUser] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -82,10 +83,13 @@ const PayementPage = () => {
       });
 
       const { url, sessionId } = await response.json();
-
-      if (sessionId) {
-        setId(sessionId)
+      // Set idSession il localStorage
+      try {
+        await AsyncStorage.setItem("idSession",sessionId)
+      } catch (error) {
+        console.log("Error", error  )
       }
+      //Get Url session to pay 
       if (url) {
         setPaymentUrl(url);
       } else {
@@ -96,27 +100,47 @@ const PayementPage = () => {
     }
   };
 
+ 
   useEffect(() => {
-    console.log("id", id)
+    try {
+      AsyncStorage.getItem('idSession').then(value=>
+      {
+         if(value != null ){
+          setId(value)
+
+      }else{
+        setId("")
+      }
+        }
+      )
+      console.log("id session stored", id)
+    } catch (error) {
+      
+    }
     const getSessionData = async () => {
       const res = await fetch(`${EndPoint}/check-payment?session_id=${id}`)
       const data = await res.json()
-      console.log("data session", data)
+      // console.log("data session", data)
 
       if (data.success) {
         setIsPay(true)
-
-
+        setActive(true)
+        console.log("You session is active :", active)
+    
       }
       if (!isPay) {
-        console.log("No")
+       setActive(false)
+    
       }
 
     }
     getSessionData()
   }, [id]);
 
-
+  const print = ()=>{
+    router.push('/challan')
+  }
+ 
   return !isPay ? (
     <ScrollView className="flex-1 bg-white mb-2" contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
       <View className="mt-16">
@@ -190,7 +214,7 @@ const PayementPage = () => {
               <QRCode value={paymentUrl} size={128} />
             ) : (
               <TouchableOpacity className="bg-second p-4 rounded-2xl shadow-lg" onPress={handlePayment}>
-                <Text>Get Qr To pay</Text>
+                <Text className="text-xl text-white font-bold ">Get Qr To pay</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -200,7 +224,7 @@ const PayementPage = () => {
   ) : (
     <View className="justify-center items-center flex-1 bg-gray-200">
       <Text className="text-lg font-semibold  ">Payment is successfully made, </Text>
-      <TouchableOpacity className="bg-second py-3 px-2 rounded-xl mt-3 ">
+      <TouchableOpacity className="bg-second py-3 px-2 rounded-xl mt-3 " onPress={print}>
         <Text className="text-xl font-bold text-white">print your receipt</Text>
       </TouchableOpacity>
     </View>

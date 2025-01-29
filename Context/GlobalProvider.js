@@ -16,8 +16,8 @@ const GlobalProvider = ({ children }) => {
   const [sessionContext, setSessionContext] = useState(null);
   const [logged, setLogged] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [qrData, setQrData] = useState(''); 
-  const [sessionId, setsessionId] = useState(null)
+  const [active, setActive] = useState(false); 
+ 
   if (!children) {
     throw new Error("GlobalProvider must have children components!");
   }
@@ -40,8 +40,8 @@ const GlobalProvider = ({ children }) => {
         setLogged,
         loading,
         setLoading,
-       sessionId,
-       setsessionId
+       setActive,
+       active
       }}
     >
       {children}
