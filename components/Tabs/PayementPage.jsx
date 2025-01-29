@@ -51,21 +51,7 @@ const PayementPage = () => {
     }
   }
 
-  // useEffect(() => {
-  //   const qrCodeData = {
-  //     name: user || 'N/A',
-  //     email: sessionContext?.user?.email || 'N/A',
-  //     phone: phone || 'N/A',
-  //     university: university || 'N/A',
-  //     amount: '22.00 EUR',
-  //     apiEndpoint: `${EndPoint}/create-payment-intent`, // L'URL de l'API
-  //     items: [
-  //       { id: 1, description: "Paiement pour l'inscription", price: 2200 } // Prix en centimes
-  //     ],
-  //   };
-  //   setQrData(JSON.stringify(qrCodeData)); // Convertit les données en chaîne JSON
 
-  // }, [user, email, phone, university]);
 
   const handlePayment = async () => {
     try {
