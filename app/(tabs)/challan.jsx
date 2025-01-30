@@ -1,10 +1,10 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import ChallanDisplay from '../../components/Tabs/ChallanDisplay'
+import InvoiceChallan from '../../components/Tabs/IvoiceChallan'
 
 const challan = () => {
   return (
-   <ChallanDisplay />
+   <InvoiceChallan />
   )
 }
 

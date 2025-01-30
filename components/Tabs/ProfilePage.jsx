@@ -7,26 +7,27 @@ import {
   TextInput,
   SafeAreaView,
   ScrollView,
+  RefreshControl,
   Alert,
 } from 'react-native';
 import { ArrowLeftIcon } from "react-native-heroicons/solid";
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
-import Feather from '@expo/vector-icons/Feather';
-import Cards from '../Cards';
+
+
 import { useGlobalProvider } from '../../Context/GlobalProvider';
 import { supabase } from '../../lib/supabase'; // Assurez-vous d'importer supabase
-
+import Avatar from "../Uploads/Avatar"
 const ProfilePage = () => {
 
   const navigation = useNavigation();
 
-  const [username, setUsername] = useState('');  
+  const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [password, setPassword] = useState("");
-
-  const { sessionContext, loading, setLoading } = useGlobalProvider();
+  const [refreshing, setRefreshing] = useState(false);
+  const { sessionContext, setSessionContext, loading, setLoading, active, setname } = useGlobalProvider();
 
   useEffect(() => {
     if (sessionContext) getProfile();
@@ -43,12 +44,13 @@ const ProfilePage = () => {
         .eq('id', sessionContext?.user.id)
         .single();
 
-    
+
       if (error && status !== 406) {
         throw error;
       }
       if (data) {
         setUsername(data.username);
+        setname(data.username)
         setAvatarUrl(data.avatar_url);
         setPassword(data.password)
       }
@@ -78,10 +80,10 @@ const ProfilePage = () => {
       if (profileError) throw profileError;
 
       const newPassword = password.trim()
-      
+
       // Mise à jour du mot de passe si un nouveau mot de passe est fourni
       if (newPassword) {
-        
+
         const { error: passwordError } = await supabase.auth.updateUser({
           password,
         });
@@ -89,8 +91,8 @@ const ProfilePage = () => {
       }
 
       Alert.alert('Profile and password updated successfully!');
-    
-      
+
+
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
@@ -99,9 +101,19 @@ const ProfilePage = () => {
       setLoading(false);
     }
   }
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setSessionContext("")
+
+  }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await getSessionData()
+    setRefreshing(false);
+  };
 
   return (
-    <ScrollView className="bg-white h-full">
+    <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />} className="bg-white h-full">
       <SafeAreaView className="mt-10 py-2 mx-4 px-7">
         {/* Header */}
         <View className="bg-gray-300 px-3 py-5 shadow-lg shadow-gray-400 rounded-3xl">
@@ -112,40 +124,41 @@ const ProfilePage = () => {
             >
               <ArrowLeftIcon color="black" size={20} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() =>  supabase.auth.signOut()
-            }>
-              <AntDesign name="logout" size={24} color="black" />
+            <TouchableOpacity onPress={signOut}>
+              <AntDesign name="logout" size={26} color="black" />
             </TouchableOpacity>
           </View>
 
           {/* Profile Info */}
           <View className="items-center mt-3 relative">
             <View className="relative">
-              <Image
-                source={{ uri: avatarUrl || 'https://example.com/default-avatar.png' }} // Utilisez un avatar par défaut si aucune URL
-                className="rounded-full shadow-gray-400 shadow-xl"
-                style={{ width: 100, height: 100 }}
+              <Avatar
+                size={200}
+                url={avatarUrl}
+                onUpload={(url) => {
+                  setAvatarUrl(url)
+                  updateProfile({ username, avatar_url: url })
+                }}
               />
-              <TouchableOpacity>
-                <Feather name="edit-3" size={20} color="black" className="bottom-7 left-20" />
-              </TouchableOpacity>
+
             </View>
 
             <Text className="text-xl font-semibold mt-2 text-gray-800">
               {sessionContext?.user?.email}
             </Text>
+            {active ? (
+              <Text className="text-green-500 text-lg font-semibold">
+                Active Acount
+              </Text>
+            ) : (
+              <Text className="text-red-500 text-lg font-semibold">Your Account is not active</Text>
+            )}
           </View>
         </View>
       </SafeAreaView>
 
       {/* Options Section */}
       <View className="p-4">
-        <Cards
-          title="Print your receipt"
-          direction={() => router.push('/challan')}
-          color="bg-gray-300"
-          icon={<Ionicons name="receipt" size={20} color="black" />}
-        />
 
         {/* Personal Information */}
         <View className="mt-6 px-4">

@@ -17,7 +17,8 @@ const GlobalProvider = ({ children }) => {
   const [logged, setLogged] = useState(false);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(false); 
- 
+  const [isHaveChallan, setisHaveChallan] = useState(false)
+  const [name, setname] = useState("")
   if (!children) {
     throw new Error("GlobalProvider must have children components!");
   }
@@ -41,7 +42,10 @@ const GlobalProvider = ({ children }) => {
         loading,
         setLoading,
        setActive,
-       active
+       active,
+       setisHaveChallan,
+       isHaveChallan,
+       name, setname
       }}
     >
       {children}
